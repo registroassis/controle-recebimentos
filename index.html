@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Controle de Recebimentos — Registro de Imóveis de Assis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0f2a4d; --navy-2:#1d4274; --blue:#3a6db3; --blue-soft:#eaf1fb; --blue-soft-2:#d5e3f5;
+  --bg:#f4f7fb; --card:#ffffff; --line:#e1e8f1; --ink:#13223a; --muted:#5d6d84;
+  --gold:#b8913a;
+  --ok:#17704a; --ok-bg:#e5f4ec; --warn:#9a5200; --warn-bg:#fff2de; --danger:#b3261e; --danger-bg:#fdeceb;
+  --r:16px; --shadow:0 1px 2px rgba(15,42,77,.05),0 6px 20px rgba(15,42,77,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.4;-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer}
+input,select{font:inherit}
+a{color:inherit}
+
+header.top{background:var(--navy);color:#fff;border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:20}
+.top-in{max-width:1320px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+.brand-mark{width:40px;height:40px;border-radius:11px;background:rgba(255,255,255,.10);display:grid;place-items:center;border:1px solid rgba(255,255,255,.14)}
+.brand small{display:block;opacity:.72;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.brand b{font-size:17px;font-weight:700;letter-spacing:-.01em}
+nav.mainnav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+nav.mainnav a{color:#d3e0f2;text-decoration:none;padding:10px 14px;border-radius:10px;font-weight:600;font-size:15px}
+nav.mainnav a.on,nav.mainnav a:hover{background:rgba(255,255,255,.12);color:#fff}
+.sync{font-size:12.5px;display:flex;align-items:center;gap:7px;color:#c9d7ea;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;background:#9fb3cc;flex:none}
+.dot.ok{background:#4fd18d}.dot.warn{background:#f2b44c}.dot.err{background:#ff7b72}
+.out{border:1px solid rgba(255,255,255,.25);background:transparent;color:#d3e0f2;border-radius:9px;padding:7px 11px;font-size:13px;font-weight:600}
+.out:hover{background:rgba(255,255,255,.1);color:#fff}
+body.logged-out nav.mainnav, body.logged-out .sync, body.logged-out #bOut{display:none}
+
+main{max-width:1320px;margin:0 auto;padding:24px 24px 60px}
+.banner{display:none;margin:0 0 18px;padding:12px 16px;border-radius:12px;font-size:14.5px;font-weight:500}
+.banner.show{display:block}
+.banner.warn{background:var(--warn-bg);color:var(--warn)}
+.banner.info{background:var(--blue-soft);color:var(--navy-2)}
+.banner.err{background:var(--danger-bg);color:var(--danger)}
+
+h1.page{font-size:26px;letter-spacing:-.02em;margin:0 0 4px;font-weight:800;color:var(--navy)}
+p.sub{margin:0 0 22px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.card-h h2{margin:0;font-size:16px;font-weight:700;color:var(--navy);letter-spacing:.01em}
+.card-h .tag{font-size:13px;color:var(--muted);font-weight:600}
+.card-b{padding:12px 20px 16px}
+
+/* Login */
+.login{max-width:420px;margin:7vh auto 0;padding:32px 30px}
+.login h1{margin:0 0 6px;font-size:24px;color:var(--navy)}
+.login p{margin:0 0 22px;color:var(--muted);font-size:15px}
+.fld{margin-bottom:16px}
+.fld label{display:block;font-weight:700;color:var(--navy);margin-bottom:7px;font-size:14.5px}
+.fld input{width:100%;height:54px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;font-size:17px;background:#fff}
+.fld input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px var(--blue-soft-2)}
+.lerr{color:var(--danger);font-weight:600;font-size:14.5px;min-height:20px;margin:-4px 0 12px}
+
+/* Home */
+.home-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.cx-card{display:flex;flex-direction:column;gap:14px;padding:22px 20px 20px;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:var(--r);background:#fff;box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s,border-color .12s;min-height:200px;position:relative}
+.cx-card:hover{transform:translateY(-2px);border-color:var(--blue);box-shadow:0 10px 28px rgba(15,42,77,.12)}
+.cx-num{width:54px;height:54px;border-radius:14px;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:800;font-size:22px}
+.cx-title{font-weight:800;font-size:20px;color:var(--navy);letter-spacing:-.01em;word-break:break-word}
+.cx-stat{margin-top:auto;display:flex;flex-direction:column;gap:4px;font-size:13.5px;color:var(--muted)}
+.cx-stat b{color:var(--ink);font-size:19px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;position:absolute;top:18px;right:16px}
+.pill.on{background:var(--ok-bg);color:var(--ok)}
+.pill.off{background:var(--blue-soft);color:var(--navy-2)}
+.home-links{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+.qlink{display:flex;align-items:center;gap:14px;padding:18px 20px;background:#fff;border:1px solid var(--line);border-radius:var(--r);text-decoration:none;box-shadow:var(--shadow)}
+.qlink:hover{border-color:var(--blue)}
+.qlink .ic{width:44px;height:44px;border-radius:12px;background:var(--blue-soft);display:grid;place-items:center;color:var(--navy);flex:none}
+.qlink b{display:block;color:var(--navy);font-size:16px}
+.qlink span{font-size:13.5px;color:var(--muted)}
+
+/* Caixa */
+.cx-head{display:flex;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.back{display:inline-flex;align-items:center;gap:6px;padding:11px 16px;border-radius:12px;background:#fff;border:1px solid var(--line);font-weight:600;color:var(--navy);text-decoration:none}
+.back:hover{border-color:var(--blue)}
+.cx-head h1{margin:0;font-size:28px;font-weight:800;color:var(--navy);letter-spacing:-.02em}
+.cx-date{margin-left:auto;font-weight:600;color:var(--muted);text-transform:capitalize}
+.tabs{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:14px;padding:5px;gap:4px;margin-bottom:18px;flex-wrap:wrap}
+.tabs button{border:0;background:transparent;padding:11px 18px;border-radius:10px;font-weight:700;color:var(--muted);font-size:15px}
+.tabs button.on{background:var(--navy);color:#fff}
+.cx-layout{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:20px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:20px}
+.rows{display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:118px 1fr 150px;align-items:center;gap:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.row:last-child{border-bottom:0}
+.chip{height:46px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;letter-spacing:-.01em;color:#1a2433;position:relative;border:1px solid rgba(0,0,0,.06)}
+.chip.nota::before{content:"";position:absolute;left:8px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:rgba(255,255,255,.55);border:1px solid rgba(0,0,0,.08)}
+.n20000{background:#e3d9cc}.n10000{background:#cfe0f2}.n5000{background:#ecd8b8}.n2000{background:#f6e7a6}
+.n1000{background:#f2cdc6}.n500{background:#dcd0ea}.n200{background:#c8dbe6}
+.chip.moeda{width:58px;height:58px;border-radius:50%;margin:0 auto;font-size:14px;box-shadow:inset 0 0 0 4px rgba(255,255,255,.45)}
+.m100{background:linear-gradient(135deg,#e9d18e,#cdd3db)}.m50{background:#d7dbe1}.m25{background:#e7cf8c}.m10{background:#e4c886}.m5{background:#dcae86}
+.stepper{display:flex;align-items:center;gap:8px;justify-content:center}
+.st{width:52px;height:52px;border-radius:12px;border:1px solid var(--line);background:var(--blue-soft);color:var(--navy);font-size:26px;font-weight:600;line-height:1;display:grid;place-items:center;flex:none;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.st:hover{background:var(--blue-soft-2)}
+.st:active{transform:scale(.96)}
+.qty{width:100%;max-width:150px;height:56px;border:1.5px solid var(--line);border-radius:12px;text-align:center;font-size:24px;font-weight:700;color:var(--ink);background:#fff}
+.qty::placeholder{color:#b6c2d2}
+.qty:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px var(--blue-soft-2)}
+.qty.has{border-color:#9dbbe3;background:#fbfdff}
+.sub-t{text-align:right;font-weight:700;font-size:18px;color:var(--muted)}
+.sub-t.has{color:var(--navy)}
+.sec-foot{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-top:1px solid var(--line);background:#fafcfe;border-radius:0 0 var(--r) var(--r);font-weight:600;color:var(--muted)}
+.sec-foot b{color:var(--navy);font-size:18px}
+.side{position:sticky;top:90px;display:flex;flex-direction:column;gap:16px}
+.hero{background:var(--navy);color:#fff;border-radius:var(--r);padding:22px 22px 20px;box-shadow:0 10px 30px rgba(15,42,77,.22);border-top:3px solid var(--gold)}
+.hero small{display:block;font-size:12.5px;letter-spacing:.09em;text-transform:uppercase;opacity:.8;font-weight:700}
+.hero .big{font-size:42px;font-weight:800;letter-spacing:-.02em;margin-top:6px;line-height:1.1;word-break:break-word}
+.hero .saved{font-size:13px;opacity:.75;margin-top:8px}
+.res{padding:6px 20px 8px}
+.res-l{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--line);font-size:15px}
+.res-l:last-child{border-bottom:0}
+.res-l span{color:var(--muted)}
+.res-l b{font-size:17px;color:var(--ink)}
+.res-l.tot b{color:var(--navy);font-size:19px}
+.btn{height:58px;border-radius:14px;border:0;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:0 18px}
+.btn.pri{background:var(--navy);color:#fff}
+.btn.pri:hover{background:var(--navy-2)}
+.btn.sec{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+.btn.sec:hover{border-color:var(--blue)}
+.btn.dan{background:var(--danger);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.mbar{display:none}
+
+/* Troco */
+.troco{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px;align-items:stretch}
+.tr-in{padding:22px;display:flex;flex-direction:column;gap:18px}
+.f label{display:block;font-weight:700;color:var(--navy);margin-bottom:8px;font-size:15px}
+.money{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:14px;background:#fff;height:72px;padding:0 18px}
+.money:focus-within{border-color:var(--blue);box-shadow:0 0 0 4px var(--blue-soft-2)}
+.money span{font-size:22px;font-weight:700;color:var(--muted);margin-right:10px}
+.money input{border:0;outline:none;flex:1;font-size:32px;font-weight:800;text-align:right;color:var(--ink);background:transparent;min-width:0}
+.tr-out{border-radius:var(--r);padding:26px;display:flex;flex-direction:column;justify-content:center;min-height:280px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow)}
+.tr-out.troco-ok{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tr-out.falta{background:var(--warn-bg);color:var(--warn);border-color:#f3d5a6}
+.tr-out.exato{background:var(--ok-bg);color:var(--ok);border-color:#bfe3cf}
+.tr-out small{font-size:14px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;opacity:.85}
+.tr-out .val{font-size:64px;font-weight:800;letter-spacing:-.03em;line-height:1.05;margin:10px 0 6px;word-break:break-word}
+.tr-out .hint{font-size:15px;opacity:.85}
+.comp{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px}
+.comp span{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 11px;border-radius:10px;font-weight:700;font-size:14.5px}
+.tr-out.idle{color:var(--muted)}
+.tr-out.idle .val{color:#b9c5d4}
+
+/* Tabelas */
+table.t{width:100%;border-collapse:collapse;font-size:15px}
+table.t th{text-align:left;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;padding:10px 12px;border-bottom:1px solid var(--line);background:#fafcfe}
+table.t td{padding:12px;border-bottom:1px solid var(--line)}
+table.t tr:last-child td{border-bottom:0}
+table.t .r{text-align:right}
+table.t tfoot td{font-weight:800;color:var(--navy);background:#fafcfe;border-top:1px solid var(--line)}
+.link-btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-weight:700;font-size:13.5px;color:var(--navy)}
+.link-btn:hover{border-color:var(--blue)}
+.empty{padding:36px 20px;text-align:center;color:var(--muted)}
+.det{background:#f8fbff}
+.det-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:6px 0}
+.det-grid div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13.5px}
+.det-grid div b{display:block;font-size:15px;color:var(--navy)}
+.det-grid div.z{opacity:.45}
+small.mut{color:var(--muted)}
+
+/* Painel */
+.toolbar{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:20px}
+.toolbar .f label{font-size:13px;margin-bottom:6px;color:var(--muted)}
+.toolbar input,.toolbar select{height:48px;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;font-size:15.5px;background:#fff;color:var(--ink)}
+.toolbar .link-btn{height:48px;padding:0 14px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.kpi{padding:18px 20px}
+.kpi small{display:block;color:var(--muted);font-weight:700;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase}
+.kpi b{display:block;font-size:28px;font-weight:800;color:var(--navy);margin-top:6px;letter-spacing:-.02em}
+.kpi span{font-size:13px;color:var(--muted)}
+.kpi.main{background:var(--navy);border-color:var(--navy);color:#fff}
+.kpi.main small,.kpi.main span{color:#c6d5ea}.kpi.main b{color:#fff}
+.adm-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;margin-bottom:20px}
+svg text{font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+.names{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:16px 20px}
+.names label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.names input{width:100%;height:48px;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;font-size:15.5px}
+.names input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft-2)}
+.names-foot{display:flex;justify-content:flex-end;gap:10px;padding:0 20px 18px}
+.names-foot .btn{width:auto;height:50px;font-size:16px}
+.day{margin-bottom:18px}
+.day-chips{display:flex;gap:8px;flex-wrap:wrap;padding:12px 20px 0}
+.day-chips span{background:var(--blue-soft);color:var(--navy-2);font-size:13px;font-weight:700;padding:6px 10px;border-radius:9px}
+
+.ov{position:fixed;inset:0;background:rgba(10,24,45,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.ov.show{display:flex}
+.modal{background:#fff;border-radius:18px;max-width:460px;width:100%;padding:26px;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+.modal h3{margin:0 0 8px;font-size:21px;color:var(--navy)}
+.modal p{margin:0 0 20px;color:var(--muted);font-size:15.5px}
+.modal .mv{font-size:30px;font-weight:800;color:var(--navy);margin:-6px 0 18px}
+.modal .acts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:14px 20px;border-radius:12px;font-weight:600;opacity:0;transition:.2s;z-index:60;max-width:90vw;text-align:center;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.lock.dis{pointer-events:none;opacity:.55}
+
+@media (max-width:1180px){
+  .home-grid{grid-template-columns:repeat(3,1fr)}
+  .cx-layout{grid-template-columns:1fr}
+  .side{position:static}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .adm-grid{grid-template-columns:1fr}
+  .names{grid-template-columns:repeat(2,1fr)}
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--navy);color:#fff;padding:12px 18px calc(12px + env(safe-area-inset-bottom));gap:14px;align-items:center;border-top:3px solid var(--gold);box-shadow:0 -8px 24px rgba(15,42,77,.25)}
+  .mbar div{flex:1;min-width:0}.mbar small{display:block;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;font-weight:700}
+  .mbar b{font-size:28px;font-weight:800;letter-spacing:-.02em}
+  .mbar span{font-size:12.5px;opacity:.75;text-align:right}
+  .has-mbar{padding-bottom:100px}
+}
+@media (max-width:760px){
+  main{padding:16px 14px 50px}
+  .top-in{padding:10px 14px}
+  .home-grid{grid-template-columns:repeat(2,1fr)}
+  .home-links{grid-template-columns:1fr}
+  .row{grid-template-columns:86px 1fr;row-gap:4px}
+  .row .sub-t{grid-column:2;text-align:center;font-size:15px}
+  .st{width:48px;height:48px}
+  .troco{grid-template-columns:1fr}
+  .tr-out .val{font-size:50px}
+  .hero .big{font-size:36px}
+  .names{grid-template-columns:1fr}
+  table.t{font-size:14px} table.t th,table.t td{padding:9px 8px}
+  .hide-sm{display:none}
+}
+</style>
+</head>
+<body class="logged-out">
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="#inicio">
+      <div class="brand-mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18M12 3l9 5H3z"/></svg>
+      </div>
+      <div><small>Registro de Imóveis · Assis/SP</small><b>Controle de Recebimentos</b></div>
+    </a>
+    <nav class="mainnav" id="nav">
+      <a href="#inicio" data-r="inicio">Caixas</a>
+      <a href="#troco" data-r="troco">Troco</a>
+      <a href="#historico" data-r="historico">Histórico</a>
+      <a href="#admin" data-r="admin">Painel geral</a>
+    </nav>
+    <div class="sync"><span class="dot" id="syncDot"></span><span id="syncTxt">Conectando…</span></div>
+    <button class="out" id="bOut" title="Sair desta conta neste computador">Sair</button>
+  </div>
+</header>
+
+<main>
+  <div class="banner" id="banner"></div>
+  <div id="view"></div>
+</main>
+
+<div class="ov" id="ov"><div class="modal" role="dialog" aria-modal="true">
+  <h3 id="mT"></h3><p id="mP"></p><div class="mv num" id="mV"></div>
+  <div class="acts"><button class="btn sec" id="mNo">Cancelar</button><button class="btn pri" id="mYes">Confirmar</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+/* ============================================================
+   CONFIGURAÇÃO DO FIREBASE
+   Cole aqui os dados do app Web do Firebase
+   (Console do Firebase › Configurações do projeto › Seus apps › Configuração do SDK).
+   Enquanto apiKey for "COLE_AQUI", o app funciona em modo de teste,
+   salvando só no navegador deste computador.
+   ============================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: "COLE_AQUI",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+// E-mail do usuário do atendimento criado no Firebase (aparece já preenchido na tela de login).
+const EMAIL_PADRAO = "";
+const FIREBASE_SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
+
+/* ============================================================
+   CÁLCULOS (valores em centavos inteiros — sem erro de arredondamento)
+   ============================================================ */
+/*CALC-START*/
+const NOTAS = [20000, 10000, 5000, 2000, 1000, 500, 200];
+const MOEDAS = [100, 50, 25, 10, 5];
+const ALL = NOTAS.concat(MOEDAS);
+const MAX_QTD = 99999;
+
+function brl(c) {
+  c = Math.round(Number(c) || 0);
+  const neg = c < 0; c = Math.abs(c);
+  const reais = Math.floor(c / 100), cent = c % 100;
+  return (neg ? '- ' : '') + 'R$ ' + String(reais).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + String(cent).padStart(2, '0');
+}
+function brlSemSimbolo(c) { return brl(c).replace('R$ ', ''); }
+function rotulo(d) { return d >= 100 ? 'R$ ' + (d / 100) : 'R$ 0,' + String(d).padStart(2, '0'); }
+function sanitizeQty(v) {
+  const dig = String(v == null ? '' : v).replace(/\D/g, '').slice(0, 5);
+  if (dig === '') return 0;
+  return Math.min(MAX_QTD, parseInt(dig, 10));
+}
+function emptyQ() { const q = {}; ALL.forEach(d => q['d' + d] = 0); return q; }
+function resumo(q) {
+  let totalCedulas = 0, totalMoedas = 0, qtdNotas = 0, qtdMoedas = 0;
+  NOTAS.forEach(d => { const n = q['d' + d] | 0; totalCedulas += n * d; qtdNotas += n; });
+  MOEDAS.forEach(d => { const n = q['d' + d] | 0; totalMoedas += n * d; qtdMoedas += n; });
+  return { totalCedulas, totalMoedas, total: totalCedulas + totalMoedas, qtdNotas, qtdMoedas };
+}
+function calcTroco(servico, pago) {
+  const diff = pago - servico;
+  if (diff > 0) return { tipo: 'troco', valor: diff };
+  if (diff < 0) return { tipo: 'falta', valor: -diff };
+  return { tipo: 'exato', valor: 0 };
+}
+function composicao(c) {
+  const itens = [];
+  for (const d of ALL) { const n = Math.floor(c / d); if (n > 0) { itens.push([d, n]); c -= n * d; } }
+  return { itens, resto: c };
+}
+function centsFromDigits(str) {
+  const dig = String(str || '').replace(/\D/g, '').replace(/^0+/, '').slice(0, 10);
+  return dig === '' ? 0 : parseInt(dig, 10);
+}
+/*CALC-END*/
+
+/* ============================================================
+   UTILITÁRIOS
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+const CX = [1, 2, 3, 4, 5];
+function diaLocal(ts) { const d = new Date(ts); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function hoje() { return diaLocal(Date.now()); }
+function addDias(dia, n) { const [y, m, d] = dia.split('-').map(Number); return diaLocal(new Date(y, m - 1, d + n).getTime()); }
+function fmtDia(dia, longo) {
+  const [y, m, d] = dia.split('-').map(Number); const dt = new Date(y, m - 1, d);
+  return longo ? dt.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }) : dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+function fmtHora(ts) { return new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); }
+function fmtInt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+let toastT;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200); }
+function confirmar({ titulo, texto, valor = '', ok = 'Confirmar', perigo = false }) {
+  return new Promise(res => {
+    $('#mT').textContent = titulo; $('#mP').textContent = texto; $('#mV').textContent = valor;
+    $('#mV').style.display = valor ? '' : 'none';
+    const yes = $('#mYes'), no = $('#mNo'), ov = $('#ov');
+    yes.textContent = ok; yes.className = 'btn ' + (perigo ? 'dan' : 'pri');
+    ov.classList.add('show'); setTimeout(() => no.focus(), 30);
+    const done = v => { ov.classList.remove('show'); yes.onclick = no.onclick = null; document.removeEventListener('keydown', key); res(v); };
+    const key = e => { if (e.key === 'Escape') done(false); };
+    yes.onclick = () => done(true); no.onclick = () => done(false);
+    document.addEventListener('keydown', key);
+  });
+}
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+const S = { hoje: hoje(), cont: {}, nomes: {}, ready: false, mode: null, logged: false };
+CX.forEach(n => { S.cont[n] = { q: emptyQ(), updatedAt: null }; S.nomes[n] = ''; });
+const cxPadrao = n => 'Caixa ' + pad(n);
+const cxName = n => S.nomes[n] || cxPadrao(n);
+const docId = (dia, n) => dia + '_c' + n;
+
+function normCont(id, d) {
+  if (!d || typeof d !== 'object') return null;
+  const caixa = Number(d.caixa);
+  if (!CX.includes(caixa) || typeof d.dia !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(d.dia)) return null;
+  const q = emptyQ(); const src = (d.q && typeof d.q === 'object') ? d.q : {};
+  ALL.forEach(x => { const v = Number(src['d' + x]); q['d' + x] = Number.isFinite(v) && v > 0 ? Math.min(MAX_QTD, Math.floor(v)) : 0; });
+  const updatedAt = Number.isFinite(Number(d.updatedAt)) ? Number(d.updatedAt) : null;
+  return { id, caixa, dia: d.dia, q, updatedAt, ...resumo(q) }; // totais sempre recalculados a partir das quantidades
+}
+function normNomes(d) {
+  const o = {}; CX.forEach(n => { const v = d && d['c' + n]; o[n] = typeof v === 'string' ? v.trim().slice(0, 40) : ''; }); return o;
+}
+
+/* ============================================================
+   ARMAZENAMENTO
+   Firebase (Firestore, tempo real) quando configurado; senão, local.
+   Coleção "contagens": um documento por caixa por dia  →  2026-11-15_c3
+   Documento "config/caixas": nomes dos caixas
+   ============================================================ */
+const Local = {
+  subs: new Set(),
+  read(k, def) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? def : v; } catch (e) { return def; } },
+  emit() { this.subs.forEach(f => f()); },
+  watch(fn) { this.subs.add(fn); fn(); return () => this.subs.delete(fn); },
+  subQuery(filter, cb) { return this.watch(() => { const all = this.read('rc_cont', {}); cb(Object.entries(all).map(([id, d]) => ({ id, d })).filter(x => x.d && filter(x.d))); }); },
+  async write(id, body) { const all = this.read('rc_cont', {}); all[id] = body; localStorage.setItem('rc_cont', JSON.stringify(all)); this.emit(); },
+  subNomes(cb) { return this.watch(() => cb(this.read('rc_nomes', {}))); },
+  async writeNomes(o) { localStorage.setItem('rc_nomes', JSON.stringify(o)); this.emit(); }
+};
+window.addEventListener('storage', () => Local.emit());
+
+const Back = {
+  fb: null, // { auth, db, fns }
+  configurado() { return FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== 'COLE_AQUI' && FIREBASE_CONFIG.projectId; },
+  async init() {
+    if (!this.configurado()) {
+      S.mode = 'local'; S.logged = true; return startApp();
+    }
+    S.mode = 'firebase';
+    try {
+      const [app, auth, fs] = await Promise.all([
+        import(FIREBASE_SDK + 'firebase-app.js'),
+        import(FIREBASE_SDK + 'firebase-auth.js'),
+        import(FIREBASE_SDK + 'firebase-firestore.js')
+      ]);
+      const fapp = app.initializeApp(FIREBASE_CONFIG);
+      this.fb = { auth: auth.getAuth(fapp), db: fs.getFirestore(fapp), A: auth, F: fs };
+    } catch (e) {
+      console.error(e);
+      showBanner('err', 'Não foi possível carregar o Firebase. Verifique a internet e atualize a página.'); setSync('err');
+      return;
+    }
+    this.fb.A.onAuthStateChanged(this.fb.auth, u => {
+      if (u) { S.logged = true; startApp(); }
+      else { S.logged = false; stopApp(); renderLogin(); }
+    });
+  },
+  async login(email, senha) { return this.fb.A.signInWithEmailAndPassword(this.fb.auth, email, senha); },
+  async logout() { if (this.fb) await this.fb.A.signOut(this.fb.auth); },
+  subDia(dia, cb, err) {
+    if (S.mode === 'local') return Local.subQuery(d => d.dia === dia, cb);
+    const F = this.fb.F; const q = F.query(F.collection(this.fb.db, 'contagens'), F.where('dia', '==', dia));
+    return F.onSnapshot(q, s => cb(s.docs.map(x => ({ id: x.id, d: x.data() })), s.metadata), err);
+  },
+  subRange(de, ate, cb, err) {
+    if (S.mode === 'local') return Local.subQuery(d => d.dia >= de && d.dia <= ate, cb);
+    const F = this.fb.F; const q = F.query(F.collection(this.fb.db, 'contagens'), F.where('dia', '>=', de), F.where('dia', '<=', ate));
+    return F.onSnapshot(q, s => cb(s.docs.map(x => ({ id: x.id, d: x.data() })), s.metadata), err);
+  },
+  async write(id, body) {
+    if (S.mode === 'local') return Local.write(id, body);
+    const F = this.fb.F; return F.setDoc(F.doc(this.fb.db, 'contagens', id), body);
+  },
+  subNomes(cb, err) {
+    if (S.mode === 'local') return Local.subNomes(cb);
+    const F = this.fb.F; return F.onSnapshot(F.doc(this.fb.db, 'config', 'caixas'), s => cb(s.exists() ? s.data() : {}), err);
+  },
+  async writeNomes(o) {
+    if (S.mode === 'local') return Local.writeNomes(o);
+    const F = this.fb.F; return F.setDoc(F.doc(this.fb.db, 'config', 'caixas'), o);
+  }
+};
+
+/* ---------- assinatura dos dados ---------- */
+let unsubs = [];
+let unsubDia = null;
+function startApp() {
+  document.body.classList.remove('logged-out');
+  stopApp();
+  unsubs.push(Back.subNomes(d => { S.nomes = normNomes(d); onNomesChanged(); }, onSubError));
+  subscribeHoje();
+  S.ready = true;
+  updateBanner(); setSync(S.mode === 'local' ? 'local' : 'ok');
+  render();
+}
+function stopApp() {
+  unsubs.forEach(u => { try { u(); } catch (e) { } }); unsubs = [];
+  if (unsubDia) { try { unsubDia(); } catch (e) { } unsubDia = null; }
+  closeRange();
+  S.ready = false;
+}
+function subscribeHoje() {
+  if (unsubDia) unsubDia();
+  const dia = S.hoje;
+  unsubDia = Back.subDia(dia, docs => {
+    if (dia !== S.hoje) return;
+    CX.forEach(n => {
+      if (busy(n)) return; // edição local ainda não gravada: mantém o que está sendo digitado
+      const f = docs.find(x => x.id === docId(dia, n));
+      const c = f ? normCont(f.id, f.d) : null;
+      S.cont[n] = c ? { q: c.q, updatedAt: c.updatedAt } : { q: emptyQ(), updatedAt: null };
+      W.last[n] = JSON.stringify(S.cont[n].q);
+    });
+    onHojeChanged();
+  }, onSubError);
+}
+// virada do dia com o app aberto: começa uma contagem nova automaticamente
+setInterval(async () => {
+  if (!S.ready || hoje() === S.hoje) return;
+  await Promise.all(CX.map(settle));
+  S.hoje = hoje(); CX.forEach(n => { S.cont[n] = { q: emptyQ(), updatedAt: null }; W.last[n] = null; });
+  subscribeHoje(); render();
+}, 30000);
+
+/* ---------- consulta por período (histórico / painel) ---------- */
+const R = { key: null, unsub: null, docs: [], loaded: false };
+function useRange(de, ate) {
+  const key = de + '|' + ate;
+  if (R.key === key) return;
+  closeRange();
+  R.key = key; R.loaded = false; R.docs = [];
+  R.unsub = Back.subRange(de, ate, docs => {
+    R.docs = docs.map(x => normCont(x.id, x.d)).filter(Boolean);
+    R.loaded = true; onRangeChanged();
+  }, onSubError);
+}
+function closeRange() { if (R.unsub) { try { R.unsub(); } catch (e) { } } R.unsub = null; R.key = null; R.docs = []; R.loaded = false; }
+
+function onSubError(err) {
+  console.error(err);
+  const code = err && err.code;
+  if (code === 'permission-denied') showBanner('err', 'Sem permissão para ler os dados. Saia e entre novamente.');
+  else showBanner('err', 'A conexão com o banco de dados foi interrompida. Atualize a página.');
+  setSync('err');
+}
+function onWriteError(e) {
+  console.error(e);
+  const code = e && e.code;
+  if (code === 'permission-denied') toast('Sem permissão para salvar. Saia e entre novamente.');
+  else toast('Não foi possível salvar agora. Verifique a internet — o valor será enviado assim que possível.');
+  setSync('warn');
+}
+
+/* ---------- gravação automática (agrupa digitação; uma gravação por vez por caixa) ---------- */
+const W = { timer: {}, pending: {}, count: {}, chain: {}, last: {}, dia: {} };
+CX.forEach(n => { W.chain[n] = Promise.resolve(); W.count[n] = 0; });
+function busy(n) { return !!W.pending[n] || W.count[n] > 0; }
+function queueSave(n) {
+  W.pending[n] = true; W.dia[n] = S.hoje; clearTimeout(W.timer[n]); setSync('saving');
+  W.timer[n] = setTimeout(() => flush(n), 400);
+}
+function flush(n) {
+  clearTimeout(W.timer[n]);
+  if (!W.pending[n]) return W.chain[n];
+  W.pending[n] = false; W.count[n]++;
+  W.chain[n] = W.chain[n].then(async () => {
+    const q = { ...S.cont[n].q }; const key = JSON.stringify(q); const dia = W.dia[n] || S.hoje;
+    try {
+      if (key !== W.last[n]) {
+        const ts = Date.now();
+        await Back.write(docId(dia, n), { caixa: n, dia, q, ...resumo(q), updatedAt: ts });
+        W.last[n] = key; if (dia === S.hoje) { S.cont[n].updatedAt = ts; showSaved(n); }
+      }
+      if (!CX.some(x => W.pending[x])) setSync(S.mode === 'local' ? 'local' : 'ok');
+    } catch (e) { onWriteError(e); }
+    finally { W.count[n]--; }
+  });
+  return W.chain[n];
+}
+async function settle(n) { await flush(n); await W.chain[n]; }
+window.addEventListener('beforeunload', e => { if (CX.some(busy)) { CX.forEach(flush); e.preventDefault(); e.returnValue = ''; } });
+
+/* ============================================================
+   STATUS
+   ============================================================ */
+function setSync(st) {
+  $('#syncDot').className = 'dot ' + ({ ok: 'ok', saving: 'warn', warn: 'warn', err: 'err', local: 'warn' }[st] || '');
+  $('#syncTxt').textContent = ({ ok: 'Sincronizado', saving: 'Salvando…', warn: 'Sem conexão', err: 'Desconectado', local: 'Modo de teste' }[st] || 'Conectando…');
+}
+function showBanner(kind, txt) { const b = $('#banner'); b.className = 'banner show ' + kind; b.textContent = txt; }
+function updateBanner() {
+  if (S.mode === 'local') return showBanner('info', 'Modo de teste: o Firebase ainda não foi configurado, então os dados ficam salvos só neste navegador.');
+  $('#banner').className = 'banner'; $('#banner').textContent = '';
+}
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+function renderLogin() {
+  document.body.classList.add('logged-out');
+  $('#view').innerHTML = `<form class="card login" id="fLogin" autocomplete="on">
+    <h1>Entrar</h1><p>Use o login do atendimento. Neste computador, você só precisa entrar uma vez.</p>
+    <div class="fld"><label for="lE">E-mail</label><input id="lE" type="email" autocomplete="username" required value="${esc(EMAIL_PADRAO)}"></div>
+    <div class="fld"><label for="lS">Senha</label><input id="lS" type="password" autocomplete="current-password" required></div>
+    <div class="lerr" id="lErr"></div>
+    <button class="btn pri" id="lBtn" type="submit">Entrar</button>
+  </form>`;
+  setTimeout(() => (EMAIL_PADRAO ? $('#lS') : $('#lE')).focus(), 50);
+  $('#fLogin').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = $('#lBtn'); btn.disabled = true; btn.textContent = 'Entrando…'; $('#lErr').textContent = '';
+    try { await Back.login($('#lE').value.trim(), $('#lS').value); }
+    catch (err) {
+      const c = err && err.code;
+      $('#lErr').textContent = c === 'auth/too-many-requests' ? 'Muitas tentativas. Aguarde alguns minutos.'
+        : c === 'auth/network-request-failed' ? 'Sem conexão com a internet.'
+        : 'E-mail ou senha incorretos.';
+      btn.disabled = false; btn.textContent = 'Entrar';
+    }
+  });
+}
+$('#bOut').onclick = async () => {
+  if (!(await confirmar({ titulo: 'Sair deste computador?', texto: 'Para usar de novo, será preciso digitar a senha.', ok: 'Sair' }))) return;
+  await Promise.all(CX.map(settle)); await Back.logout();
+};
+
+/* ============================================================
+   ROTAS
+   ============================================================ */
+let route = 'inicio', curCx = null, cxTab = 'contagem';
+function parseRoute() {
+  const h = (location.hash || '').replace('#', '');
+  const m = h.match(/^caixa-([1-5])$/);
+  if (m) return { r: 'caixa', n: Number(m[1]) };
+  if (['troco', 'historico', 'admin'].includes(h)) return { r: h };
+  return { r: 'inicio' };
+}
+function render() {
+  if (!S.logged) return;
+  const p = parseRoute();
+  if (curCx && (p.r !== 'caixa' || p.n !== curCx)) flush(curCx);
+  route = p.r; curCx = p.r === 'caixa' ? p.n : null;
+  if (route !== 'historico' && route !== 'admin') closeRange();
+  $$('#nav a').forEach(a => a.classList.toggle('on', a.dataset.r === route || (route === 'caixa' && a.dataset.r === 'inicio')));
+  const v = $('#view');
+  if (route === 'caixa') renderCaixa(v, curCx);
+  else if (route === 'troco') renderTrocoPage(v);
+  else if (route === 'historico') renderHistorico(v);
+  else if (route === 'admin') renderAdmin(v);
+  else renderInicio(v);
+}
+window.addEventListener('hashchange', () => { cxTab = 'contagem'; render(); window.scrollTo(0, 0); });
+
+function onHojeChanged() {
+  if (route === 'caixa') syncCaixaInputs(curCx);
+  else if (route === 'inicio') renderInicio($('#view'));
+  else if (route === 'admin' && admDia === S.hoje) renderAdminBody();
+}
+function onRangeChanged() {
+  if (route === 'admin') renderAdminBody();
+  else if (route === 'historico') renderHistLista();
+}
+function onNomesChanged() {
+  if (route === 'inicio') renderInicio($('#view'));
+  else if (route === 'caixa') { const h = $('#cxNome'); if (h) h.textContent = cxName(curCx); }
+  else if (route === 'admin') { renderAdminBody(); fillNomes(false); }
+  else if (route === 'historico') { renderHistorico($('#view')); }
+}
+
+/* ============================================================
+   TELA INICIAL
+   ============================================================ */
+function renderInicio(v) {
+  v.innerHTML = `
+    <h1 class="page">Selecione o seu caixa</h1>
+    <p class="sub" style="text-transform:none">${esc(fmtDia(S.hoje, true))} · cada caixa tem a sua contagem do dia, salva automaticamente.</p>
+    <div class="home-grid">
+      ${CX.map(n => {
+        const c = S.cont[n]; const r = resumo(c.q);
+        return `<a class="cx-card" href="#caixa-${n}">
+          <span class="pill ${r.total > 0 ? 'on' : 'off'}">${r.total > 0 ? 'Com lançamentos' : 'Sem lançamentos'}</span>
+          <div class="cx-num num">${pad(n)}</div>
+          <div class="cx-title">${esc(cxName(n))}</div>
+          <div class="cx-stat num">
+            <span>Contagem de hoje</span><b>${brl(r.total)}</b>
+            <span>${c.updatedAt ? 'Atualizado às ' + fmtHora(c.updatedAt) : '&nbsp;'}</span>
+          </div>
+        </a>`;
+      }).join('')}
+    </div>
+    <div class="home-links">
+      <a class="qlink" href="#troco"><div class="ic">${icon('troco')}</div><div><b>Calculadora de troco</b><span>Valor do serviço × valor pago</span></div></a>
+      <a class="qlink" href="#historico"><div class="ic">${icon('hist')}</div><div><b>Histórico</b><span>Contagens anteriores por caixa e por dia</span></div></a>
+      <a class="qlink" href="#admin"><div class="ic">${icon('chart')}</div><div><b>Painel geral</b><span>Visão dos 5 caixas e nomes dos caixas</span></div></a>
+    </div>`;
+}
+function icon(k) {
+  const p = {
+    troco: '<path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2.5"/>',
+    hist: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    chart: '<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>'
+  }[k];
+  return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+}
+
+/* ============================================================
+   TELA DO CAIXA
+   ============================================================ */
+function rowHTML(d, moeda) {
+  const lab = moeda && d < 100 ? rotulo(d).replace('R$ ', '') : rotulo(d);
+  return `<div class="row" data-d="${d}">
+    <div class="chip ${moeda ? 'moeda m' + d : 'nota n' + d}">${lab}</div>
+    <div class="stepper">
+      <button class="st" data-act="dec" data-d="${d}" aria-label="Diminuir ${brl(d)}" tabindex="-1">−</button>
+      <input class="qty num" data-d="${d}" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="0" aria-label="Quantidade de ${moeda ? 'moedas' : 'notas'} de ${brl(d)}">
+      <button class="st" data-act="inc" data-d="${d}" aria-label="Aumentar ${brl(d)}" tabindex="-1">+</button>
+    </div>
+    <div class="sub-t num" data-sub="${d}">R$ 0,00</div>
+  </div>`;
+}
+function renderCaixa(v, n) {
+  v.innerHTML = `
+    <div class="cx-head">
+      <a class="back" href="#inicio">← Caixas</a>
+      <h1 id="cxNome">${esc(cxName(n))}</h1>
+      <div class="cx-date">${esc(fmtDia(S.hoje, true))}</div>
+    </div>
+    <div class="tabs" id="cxTabs">
+      <button data-t="contagem" class="${cxTab === 'contagem' ? 'on' : ''}">Contagem de dinheiro</button>
+      <button data-t="troco" class="${cxTab === 'troco' ? 'on' : ''}">Calculadora de troco</button>
+    </div>
+    <div id="cxBody"></div>`;
+  $$('#cxTabs button').forEach(b => b.onclick = () => { cxTab = b.dataset.t; $$('#cxTabs button').forEach(x => x.classList.toggle('on', x === b)); renderCxBody(n); });
+  renderCxBody(n);
+}
+function renderCxBody(n) {
+  const b = $('#cxBody');
+  b.classList.remove('has-mbar');
+  if (cxTab === 'troco') { b.innerHTML = trocoHTML('cx'); bindTroco('cx'); return; }
+  const locked = !S.ready;
+  b.innerHTML = `
+    <div class="cx-layout">
+      <div class="stack lock ${locked ? 'dis' : ''}" id="cnt">
+        <section class="card">
+          <div class="card-h"><h2>Cédulas</h2><span class="tag">Quantidade de notas</span></div>
+          <div class="card-b rows">${NOTAS.map(d => rowHTML(d, false)).join('')}</div>
+          <div class="sec-foot num"><span>Subtotal cédulas · <span id="qN">0</span> notas</span><b id="tN">R$ 0,00</b></div>
+        </section>
+        <section class="card">
+          <div class="card-h"><h2>Moedas</h2><span class="tag">Quantidade de moedas</span></div>
+          <div class="card-b rows">${MOEDAS.map(d => rowHTML(d, true)).join('')}</div>
+          <div class="sec-foot num"><span>Subtotal moedas · <span id="qM">0</span> moedas</span><b id="tM">R$ 0,00</b></div>
+        </section>
+      </div>
+      <aside class="side">
+        <div class="hero"><small>Total recebido</small><div class="big num" id="tG">R$ 0,00</div><div class="saved" id="svd"></div></div>
+        <section class="card">
+          <div class="card-h"><h2>Resumo do caixa</h2><span class="tag">${esc(fmtDia(S.hoje))}</span></div>
+          <div class="res num">
+            <div class="res-l"><span>Total em cédulas</span><b id="rC">R$ 0,00</b></div>
+            <div class="res-l"><span>Total em moedas</span><b id="rM">R$ 0,00</b></div>
+            <div class="res-l"><span>Quantidade de notas</span><b id="rQN">0</b></div>
+            <div class="res-l"><span>Quantidade de moedas</span><b id="rQM">0</b></div>
+            <div class="res-l tot"><span>Total geral</span><b id="rG">R$ 0,00</b></div>
+          </div>
+        </section>
+        <button class="btn sec" id="bLimp" ${locked ? 'disabled' : ''}>Limpar campos</button>
+      </aside>
+    </div>
+    <div class="mbar"><div><small>Total recebido</small><b class="num" id="tG2">R$ 0,00</b></div><span id="svd2"></span></div>`;
+  b.classList.add('has-mbar');
+  const cnt = $('#cnt');
+  cnt.addEventListener('input', e => {
+    const el = e.target; if (!el.classList.contains('qty')) return;
+    const dig = el.value.replace(/\D/g, '').slice(0, 5);
+    if (el.value !== dig) el.value = dig;
+    S.cont[n].q['d' + el.dataset.d] = sanitizeQty(dig);
+    updateTotals(n); queueSave(n);
+  });
+  cnt.addEventListener('focusin', e => { if (e.target.classList.contains('qty')) setTimeout(() => e.target.select(), 0); });
+  cnt.addEventListener('focusout', e => { const el = e.target; if (el.classList.contains('qty')) { const v = S.cont[n].q['d' + el.dataset.d]; el.value = v ? String(v) : ''; } });
+  cnt.addEventListener('keydown', e => {
+    const el = e.target; if (!el.classList.contains('qty')) return;
+    const inputs = $$('.qty', cnt); const i = inputs.indexOf(el);
+    if (e.key === 'Enter') { e.preventDefault(); if (inputs[i + 1]) inputs[i + 1].focus(); else el.blur(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); step(n, el.dataset.d, 1); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); step(n, el.dataset.d, -1); }
+  });
+  cnt.addEventListener('click', e => { const bt = e.target.closest('.st'); if (!bt) return; step(n, bt.dataset.d, bt.dataset.act === 'inc' ? 1 : -1); });
+  $('#bLimp').onclick = () => limpar(n);
+  syncCaixaInputs(n);
+}
+function step(n, d, delta) {
+  const k = 'd' + d; const v = Math.max(0, Math.min(MAX_QTD, (S.cont[n].q[k] || 0) + delta));
+  S.cont[n].q[k] = v;
+  const el = $(`.qty[data-d="${d}"]`); if (el) el.value = v ? String(v) : '';
+  updateTotals(n); queueSave(n);
+}
+function syncCaixaInputs(n) {
+  if (!n) return;
+  const c = S.cont[n];
+  $$('.qty').forEach(el => { if (document.activeElement === el) return; const v = c.q['d' + el.dataset.d]; el.value = v ? String(v) : ''; });
+  updateTotals(n); showSaved(n);
+}
+function showSaved(n) {
+  if (curCx !== n) return;
+  const t = S.cont[n].updatedAt ? 'Salvo automaticamente às ' + fmtHora(S.cont[n].updatedAt) : 'Salva automaticamente a cada lançamento';
+  const a = $('#svd'), b = $('#svd2'); if (a) a.textContent = t; if (b) b.textContent = S.cont[n].updatedAt ? 'Salvo ' + fmtHora(S.cont[n].updatedAt) : '';
+}
+function updateTotals(n) {
+  const q = S.cont[n].q; const r = resumo(q);
+  ALL.forEach(d => {
+    const s = $(`[data-sub="${d}"]`); if (!s) return;
+    const qt = q['d' + d] || 0; s.textContent = brl(qt * d); s.classList.toggle('has', qt > 0);
+    const el = $(`.qty[data-d="${d}"]`); if (el) el.classList.toggle('has', qt > 0);
+  });
+  const set = (id, t) => { const e = $('#' + id); if (e) e.textContent = t; };
+  set('tN', brl(r.totalCedulas)); set('tM', brl(r.totalMoedas)); set('qN', fmtInt(r.qtdNotas)); set('qM', fmtInt(r.qtdMoedas));
+  set('tG', brl(r.total)); set('tG2', brl(r.total)); set('rC', brl(r.totalCedulas)); set('rM', brl(r.totalMoedas));
+  set('rQN', fmtInt(r.qtdNotas)); set('rQM', fmtInt(r.qtdMoedas)); set('rG', brl(r.total));
+}
+async function limpar(n) {
+  const r = resumo(S.cont[n].q);
+  if (r.total === 0) { toast('Os campos já estão vazios.'); return; }
+  const ok = await confirmar({ titulo: 'Limpar todos os campos?', texto: `As quantidades de hoje do ${cxName(n)} serão apagadas.`, valor: brl(r.total), ok: 'Sim, limpar', perigo: true });
+  if (!ok) return;
+  S.cont[n].q = emptyQ(); syncCaixaInputs(n); queueSave(n); await settle(n);
+  toast('Campos limpos.');
+}
+
+/* ============================================================
+   CALCULADORA DE TROCO
+   ============================================================ */
+const TR = {};
+function trocoHTML(id) {
+  return `<div class="troco">
+    <section class="card tr-in">
+      <div class="f"><label for="${id}-s">Valor do serviço / atendimento</label><div class="money"><span>R$</span><input id="${id}-s" class="num" inputmode="numeric" autocomplete="off" placeholder="0,00"></div></div>
+      <div class="f"><label for="${id}-p">Valor pago pelo cliente</label><div class="money"><span>R$</span><input id="${id}-p" class="num" inputmode="numeric" autocomplete="off" placeholder="0,00"></div></div>
+      <button class="btn sec" id="${id}-x">Limpar valores</button>
+    </section>
+    <section class="tr-out idle" id="${id}-o" aria-live="polite"></section>
+  </div>`;
+}
+function bindTroco(id) {
+  const st = TR[id] || (TR[id] = { s: 0, p: 0 });
+  const si = $('#' + id + '-s'), pi = $('#' + id + '-p');
+  const show = () => { si.value = st.s ? brlSemSimbolo(st.s) : ''; pi.value = st.p ? brlSemSimbolo(st.p) : ''; out(); };
+  const mask = (el, key) => {
+    el.addEventListener('input', e => {
+      let dig = el.value.replace(/\D/g, '');
+      const prev = st[key] ? String(st[key]) : '';
+      if (e.inputType === 'deleteContentBackward' && dig.replace(/^0+/, '') === prev) dig = prev.slice(0, -1);
+      st[key] = centsFromDigits(dig);
+      el.value = st[key] ? brlSemSimbolo(st[key]) : '';
+      el.setSelectionRange(el.value.length, el.value.length);
+      out();
+    });
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); (el === si ? pi : si).focus(); } });
+    el.addEventListener('focus', () => setTimeout(() => el.setSelectionRange(el.value.length, el.value.length), 0));
+  };
+  const out = () => {
+    const o = $('#' + id + '-o');
+    if (!st.s && !st.p) { o.className = 'tr-out idle'; o.innerHTML = `<small>Troco a devolver</small><div class="val num">R$ 0,00</div><div class="hint">Digite os valores — o cálculo é automático. Ex.: 49780 vira 497,80.</div>`; return; }
+    const r = calcTroco(st.s, st.p);
+    if (r.tipo === 'troco') {
+      const c = composicao(r.valor);
+      o.className = 'tr-out troco-ok';
+      o.innerHTML = `<small>Troco a devolver</small><div class="val num">${brl(r.valor)}</div>
+        <div class="hint num">Pago ${brl(st.p)} − serviço ${brl(st.s)}</div>
+        <div class="comp num">${c.itens.map(([d, q]) => `<span>${q}× ${brl(d)}</span>`).join('')}${c.resto ? `<span>+ ${c.resto} centavo${c.resto > 1 ? 's' : ''}</span>` : ''}</div>`;
+    } else if (r.tipo === 'falta') {
+      o.className = 'tr-out falta';
+      o.innerHTML = `<small>Falta receber</small><div class="val num">${brl(r.valor)}</div><div class="hint num">O cliente pagou ${brl(st.p)} e o serviço é ${brl(st.s)}. Não há troco.</div>`;
+    } else {
+      o.className = 'tr-out exato';
+      o.innerHTML = `<small>Valor exato</small><div class="val num">Sem troco</div><div class="hint num">Pago ${brl(st.p)} = serviço ${brl(st.s)}</div>`;
+    }
+  };
+  mask(si, 's'); mask(pi, 'p');
+  $('#' + id + '-x').onclick = () => { st.s = 0; st.p = 0; show(); si.focus(); };
+  show();
+}
+function renderTrocoPage(v) {
+  v.innerHTML = `<h1 class="page">Calculadora de troco</h1><p class="sub">Só faz a conta — não grava nada.</p>${trocoHTML('pg')}`;
+  bindTroco('pg'); setTimeout(() => $('#pg-s').focus(), 50);
+}
+
+/* ============================================================
+   HISTÓRICO
+   ============================================================ */
+const H = { caixa: 'all', de: null, ate: null };
+function detHTML(f) {
+  return `<div class="det-grid num">${ALL.map(d => { const q = f.q['d' + d] || 0; return `<div class="${q ? '' : 'z'}">${NOTAS.includes(d) ? 'Nota' : 'Moeda'} ${brl(d)}<b>${fmtInt(q)} × = ${brl(q * d)}</b></div>`; }).join('')}</div>`;
+}
+function renderHistorico(v) {
+  if (!H.de) { H.ate = hoje(); H.de = addDias(H.ate, -6); }
+  v.innerHTML = `<h1 class="page">Histórico</h1><p class="sub">Contagens de cada caixa por dia, com as quantidades de cada nota e moeda.</p>
+    <div class="toolbar">
+      <div class="f"><label for="hC">Caixa</label><select id="hC"><option value="all">Todos os caixas</option>${CX.map(n => `<option value="${n}">${esc(cxName(n))}</option>`).join('')}</select></div>
+      <div class="f"><label for="hDe">De</label><input type="date" id="hDe"></div>
+      <div class="f"><label for="hAte">Até</label><input type="date" id="hAte"></div>
+      <div class="f"><label>&nbsp;</label><div style="display:flex;gap:8px">
+        <button class="link-btn" data-q="0">Hoje</button><button class="link-btn" data-q="6">7 dias</button><button class="link-btn" data-q="29">30 dias</button></div></div>
+    </div>
+    <div id="hList"></div>`;
+  $('#hC').value = H.caixa; $('#hDe').value = H.de; $('#hAte').value = H.ate;
+  $('#hC').onchange = e => { H.caixa = e.target.value; renderHistLista(); };
+  const upd = () => { let de = H.de, ate = H.ate; if (de > ate) [de, ate] = [ate, de]; useRange(de, ate); renderHistLista(); };
+  $('#hDe').onchange = e => { if (e.target.value) { H.de = e.target.value; upd(); } };
+  $('#hAte').onchange = e => { if (e.target.value) { H.ate = e.target.value; upd(); } };
+  $$('[data-q]', v).forEach(b => b.onclick = () => { H.ate = hoje(); H.de = addDias(H.ate, -Number(b.dataset.q)); $('#hDe').value = H.de; $('#hAte').value = H.ate; upd(); });
+  upd();
+}
+function renderHistLista() {
+  const box = $('#hList'); if (!box) return;
+  if (!R.loaded) { box.innerHTML = '<div class="card empty">Carregando…</div>'; return; }
+  const list = R.docs.filter(f => f.total > 0 && (H.caixa === 'all' || f.caixa === Number(H.caixa)));
+  if (!list.length) { box.innerHTML = '<div class="card empty">Nenhuma contagem encontrada neste período.</div>'; return; }
+  const dias = {}; list.forEach(f => (dias[f.dia] = dias[f.dia] || []).push(f));
+  const sum = (arr, k) => arr.reduce((s, f) => s + f[k], 0);
+  box.innerHTML = `<div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="card kpi main"><small>Total no período</small><b class="num">${brl(sum(list, 'total'))}</b><span>${Object.keys(dias).length} dia(s) com movimento</span></div>
+      <div class="card kpi"><small>Cédulas</small><b class="num">${brl(sum(list, 'totalCedulas'))}</b><span class="num">${fmtInt(sum(list, 'qtdNotas'))} notas</span></div>
+      <div class="card kpi"><small>Moedas</small><b class="num">${brl(sum(list, 'totalMoedas'))}</b><span class="num">${fmtInt(sum(list, 'qtdMoedas'))} moedas</span></div>
+    </div>` +
+    Object.keys(dias).sort().reverse().map(dia => {
+      const fs = dias[dia].sort((a, b) => a.caixa - b.caixa);
+      return `<section class="card day">
+        <div class="card-h"><h2 style="text-transform:capitalize">${esc(fmtDia(dia, true))}</h2><span class="tag num">Total do dia: <b style="color:var(--navy);font-size:16px">${brl(sum(fs, 'total'))}</b></span></div>
+        <div style="overflow-x:auto"><table class="t num">
+          <thead><tr><th>Caixa</th><th class="r">Cédulas</th><th class="r">Moedas</th><th class="r">Total</th><th class="r hide-sm">Atualizado</th><th class="r"></th></tr></thead>
+          <tbody>${fs.map(f => `
+            <tr><td><b>${esc(cxName(f.caixa))}</b></td>
+            <td class="r">${brl(f.totalCedulas)}<br><small class="mut">${fmtInt(f.qtdNotas)} notas</small></td>
+            <td class="r">${brl(f.totalMoedas)}<br><small class="mut">${fmtInt(f.qtdMoedas)} moedas</small></td>
+            <td class="r"><b>${brl(f.total)}</b></td>
+            <td class="r hide-sm">${f.updatedAt ? fmtHora(f.updatedAt) : '—'}</td>
+            <td class="r"><button class="link-btn" data-det="${esc(f.id)}">Detalhes</button></td></tr>
+            <tr class="det" data-detrow="${esc(f.id)}" hidden><td colspan="6">${detHTML(f)}</td></tr>`).join('')}
+          </tbody></table></div>
+      </section>`;
+    }).join('');
+  box.onclick = e => {
+    const b = e.target.closest('[data-det]'); if (!b) return;
+    const r = box.querySelector(`[data-detrow="${CSS.escape(b.dataset.det)}"]`);
+    if (r) { r.hidden = !r.hidden; b.textContent = r.hidden ? 'Detalhes' : 'Ocultar'; }
+  };
+}
+
+/* ============================================================
+   PAINEL GERAL
+   ============================================================ */
+let admDia = null;
+function renderAdmin(v) {
+  if (!admDia) admDia = hoje();
+  v.innerHTML = `<h1 class="page">Painel geral</h1><p class="sub">Visão consolidada dos 5 caixas, atualizada em tempo real.</p>
+    <div class="toolbar"><div class="f"><label for="aD">Dia</label><input type="date" id="aD"></div>
+    <div class="f"><label>&nbsp;</label><button class="link-btn" id="aHoje">Hoje</button></div></div>
+    <div id="admBody"></div>
+    <section class="card" id="nomesCard">
+      <div class="card-h"><h2>Nomes dos caixas</h2><span class="tag">Aparecem na tela inicial, no painel e no histórico</span></div>
+      <div class="names">${CX.map(n => `<div><label for="nm${n}">Caixa ${pad(n)}</label><input id="nm${n}" maxlength="40" placeholder="${cxPadrao(n)}"></div>`).join('')}</div>
+      <div class="names-foot"><button class="btn sec" id="nmReset">Desfazer</button><button class="btn pri" id="nmSave">Salvar nomes</button></div>
+    </section>`;
+  $('#aD').value = admDia;
+  const go = () => { useRange(addDias(admDia, -6), admDia); renderAdminBody(); };
+  $('#aD').onchange = e => { if (e.target.value) { admDia = e.target.value; go(); } };
+  $('#aHoje').onclick = () => { admDia = hoje(); $('#aD').value = admDia; go(); };
+  fillNomes(true);
+  $('#nmReset').onclick = () => fillNomes(true);
+  $('#nmSave').onclick = salvarNomes;
+  go();
+}
+let nomesSujos = false;
+function fillNomes(force) {
+  if (!force && nomesSujos) return;
+  CX.forEach(n => { const i = $('#nm' + n); if (i) i.value = S.nomes[n]; });
+  nomesSujos = false;
+  $$('.names input').forEach(i => i.oninput = () => { nomesSujos = true; });
+}
+async function salvarNomes() {
+  const o = {}; CX.forEach(n => { o['c' + n] = ($('#nm' + n).value || '').trim().slice(0, 40); });
+  const btn = $('#nmSave'); btn.disabled = true;
+  try { await Back.writeNomes(o); S.nomes = normNomes(o); nomesSujos = false; toast('Nomes dos caixas salvos.'); renderAdminBody(); }
+  catch (e) { onWriteError(e); }
+  btn.disabled = false;
+}
+function renderAdminBody() {
+  const box = $('#admBody'); if (!box) return;
+  if (!R.loaded) { box.innerHTML = '<div class="card empty" style="margin-bottom:20px">Carregando…</div>'; return; }
+  const isHoje = admDia === S.hoje;
+  const doDia = n => {
+    if (isHoje) { const c = S.cont[n]; return { q: c.q, updatedAt: c.updatedAt, ...resumo(c.q) }; } // valor ao vivo, inclusive o que está sendo digitado aqui
+    return R.docs.find(f => f.dia === admDia && f.caixa === n) || { q: emptyQ(), updatedAt: null, ...resumo(emptyQ()) };
+  };
+  const per = CX.map(n => ({ n, ...doDia(n) }));
+  const tot = per.reduce((s, p) => s + p.total, 0), ced = per.reduce((s, p) => s + p.totalCedulas, 0), moe = per.reduce((s, p) => s + p.totalMoedas, 0);
+  const ativos = per.filter(p => p.total > 0).length;
+  const qd = {}; ALL.forEach(d => qd[d] = per.reduce((s, p) => s + (p.q['d' + d] || 0), 0));
+  const dias7 = []; for (let i = 6; i >= 0; i--) { const d = addDias(admDia, -i); dias7.push([d, d === admDia ? tot : R.docs.filter(f => f.dia === d).reduce((s, f) => s + f.total, 0)]); }
+  box.innerHTML = `
+    <div class="kpis">
+      <div class="card kpi main"><small>Total geral recebido</small><b class="num">${brl(tot)}</b><span style="text-transform:capitalize">${esc(fmtDia(admDia, true))}</span></div>
+      <div class="card kpi"><small>Total em cédulas</small><b class="num">${brl(ced)}</b><span class="num">${fmtInt(per.reduce((s, p) => s + p.qtdNotas, 0))} notas</span></div>
+      <div class="card kpi"><small>Total em moedas</small><b class="num">${brl(moe)}</b><span class="num">${fmtInt(per.reduce((s, p) => s + p.qtdMoedas, 0))} moedas</span></div>
+      <div class="card kpi"><small>Caixas com lançamento</small><b class="num">${ativos} de 5</b><span>${isHoje ? 'atualizando ao vivo' : 'dia anterior'}</span></div>
+    </div>
+    <div class="adm-grid">
+      <section class="card"><div class="card-h"><h2>Recebido por caixa</h2></div><div class="card-b">${barsCaixa(per)}</div></section>
+      <section class="card"><div class="card-h"><h2>Últimos 7 dias</h2><span class="tag">Total dos 5 caixas por dia</span></div><div class="card-b">${cols7(dias7)}</div></section>
+    </div>
+    <section class="card" style="margin-bottom:20px">
+      <div class="card-h"><h2>Resumo por caixa</h2></div>
+      <div style="overflow-x:auto"><table class="t num">
+        <thead><tr><th>Caixa</th><th class="r hide-sm">Notas</th><th class="r hide-sm">Moedas</th><th class="r">Cédulas</th><th class="r">Moedas</th><th class="r hide-sm">Atualizado</th><th class="r">Total</th></tr></thead>
+        <tbody>${per.map(p => `<tr><td><a href="#caixa-${p.n}" style="font-weight:700;color:var(--navy)">${esc(cxName(p.n))}</a></td><td class="r hide-sm">${fmtInt(p.qtdNotas)}</td><td class="r hide-sm">${fmtInt(p.qtdMoedas)}</td><td class="r">${brl(p.totalCedulas)}</td><td class="r">${brl(p.totalMoedas)}</td><td class="r hide-sm">${p.updatedAt && p.total ? fmtHora(p.updatedAt) : '—'}</td><td class="r"><b>${brl(p.total)}</b></td></tr>`).join('')}</tbody>
+        <tfoot><tr><td>Total geral</td><td class="r hide-sm">${fmtInt(per.reduce((s, p) => s + p.qtdNotas, 0))}</td><td class="r hide-sm">${fmtInt(per.reduce((s, p) => s + p.qtdMoedas, 0))}</td><td class="r">${brl(ced)}</td><td class="r">${brl(moe)}</td><td class="r hide-sm"></td><td class="r">${brl(tot)}</td></tr></tfoot>
+      </table></div>
+    </section>
+    <section class="card" style="margin-bottom:20px">
+      <div class="card-h"><h2>Quantidade por nota e moeda</h2><span class="tag">Soma dos 5 caixas</span></div>
+      <div style="overflow-x:auto"><table class="t num">
+        <thead><tr><th>Denominação</th><th class="r">Quantidade</th><th class="r">Valor</th></tr></thead>
+        <tbody>${ALL.map(d => `<tr style="${qd[d] ? '' : 'color:#a3afbf'}"><td>${NOTAS.includes(d) ? 'Nota' : 'Moeda'} ${brl(d)}</td><td class="r">${fmtInt(qd[d])}</td><td class="r">${brl(qd[d] * d)}</td></tr>`).join('')}</tbody>
+        <tfoot><tr><td>Total</td><td class="r">${fmtInt(ALL.reduce((s, d) => s + qd[d], 0))}</td><td class="r">${brl(tot)}</td></tr></tfoot>
+      </table></div>
+    </section>`;
+}
+function barsCaixa(per) {
+  const W0 = 560, rowH = 46, lab = 140, right = 116, H0 = per.length * rowH + 6;
+  const max = Math.max(1, ...per.map(p => p.total)); const bw = W0 - lab - right;
+  const curtoNome = s => s.length > 16 ? s.slice(0, 15) + '…' : s;
+  return `<svg viewBox="0 0 ${W0} ${H0}" width="100%" role="img" aria-label="Total recebido por caixa">
+    ${per.map((p, i) => {
+      const y = i * rowH + 8, h = 26, w = p.total / max * bw;
+      return `<text x="0" y="${y + 18}" font-size="14" font-weight="700" fill="#0f2a4d">${esc(curtoNome(cxName(p.n)))}</text>
+        <rect x="${lab}" y="${y}" width="${bw}" height="${h}" rx="6" fill="#eef3f9"/>
+        ${w > 0 ? `<rect x="${lab}" y="${y}" width="${Math.max(3, w)}" height="${h}" rx="6" fill="#0f2a4d"/>` : ''}
+        <text x="${W0}" y="${y + 18}" font-size="14" font-weight="700" fill="#13223a" text-anchor="end">${brl(p.total)}</text>`;
+    }).join('')}
+  </svg>`;
+}
+function cols7(d7) {
+  const W0 = 480, H0 = 230, top = 26, bot = 34, gap = 14, n = d7.length, cw = (W0 - gap * (n - 1)) / n;
+  const max = Math.max(1, ...d7.map(x => x[1])), ch = H0 - top - bot;
+  const curto = c => c >= 100000 ? 'R$ ' + (c / 100000).toFixed(1).replace('.', ',') + ' mil' : brl(c).replace(',00', '');
+  return `<svg viewBox="0 0 ${W0} ${H0}" width="100%" role="img" aria-label="Total dos últimos 7 dias">
+    <line x1="0" x2="${W0}" y1="${top + ch}" y2="${top + ch}" stroke="#e1e8f1"/>
+    ${d7.map(([dia, v], i) => {
+      const x = i * (cw + gap), h = v / max * ch, last = i === n - 1;
+      return `${v > 0 ? `<rect x="${x}" y="${top + ch - h}" width="${cw}" height="${h}" rx="6" fill="${last ? '#0f2a4d' : '#9dbbe3'}"/><text x="${x + cw / 2}" y="${top + ch - h - 7}" font-size="11.5" font-weight="700" fill="#13223a" text-anchor="middle">${curto(v)}</text>` : ''}
+        <text x="${x + cw / 2}" y="${H0 - 12}" font-size="12.5" fill="${last ? '#0f2a4d' : '#5d6d84'}" font-weight="${last ? 800 : 600}" text-anchor="middle">${fmtDia(dia)}</text>`;
+    }).join('')}
+  </svg>`;
+}
+
+/* ============================================================
+   INÍCIO
+   ============================================================ */
+Back.init();
+</script>
+</body>
+</html>
