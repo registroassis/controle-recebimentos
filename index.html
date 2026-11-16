@@ -507,6 +507,46 @@ function saldosCaixa(lista) {
   return out;
 }
 /*CALC-END*/
+/*IMPORT-START*/
+// Lê as planilhas de fechamento antigas: acha o cabeçalho (RI, TROCO, PIX…) e pega as linhas do mês pedido.
+function normHdr(t) { return String(t == null ? '' : t).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim(); }
+const HDR_MAP = { 'RI': 'ri', 'RI/TD/PJ': 'ri', 'RI/TDPJ': 'ri', 'RI TD PJ': 'ri', 'TROCO': 'troco', 'CHEQUE PRE': 'chequePre', 'CHEQUE PROPRIO': 'chequeProprio', 'CREDITO BANCARIO': 'creditoBancario', 'ONR': 'onr', 'PIX': 'pix', 'DEBITO': 'debito', 'CREDITO': 'credito', 'MOEDAS': 'moedas', 'DESPESAS': 'despesas', 'VALOR DEPOSITO': '_dep', 'MALOTE': '_dep', 'DEPOSITO': '_dep' };
+const IMP_KEYS = ['ri', 'troco', 'chequePre', 'chequeProprio', 'creditoBancario', 'onr', 'pix', 'debito', 'credito', 'moedas', 'despesas'];
+function serialToDia(n) { const d = new Date(Date.UTC(1899, 11, 30) + Math.round(n) * 86400000); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0'); }
+function cellMoney(c) {
+  if (!c) return 0;
+  if (c.t === 'n') return Math.max(0, Math.round(c.v * 100));
+  if (c.t === 's') { const p = parseMoney(c.v); return p == null ? 0 : p; }
+  return 0;
+}
+function extrairMes(XLSX, wb, mes) {
+  const enc = (r, c) => XLSX.utils.encode_cell({ r, c });
+  let best = null;
+  wb.SheetNames.forEach(nome => {
+    const ws = wb.Sheets[nome]; if (!ws || !ws['!ref']) return;
+    const rg = XLSX.utils.decode_range(ws['!ref']);
+    let map = null; const porDia = {};
+    for (let r = rg.s.r; r <= rg.e.r; r++) {
+      const m = {}; let hits = 0;
+      for (let c = 1; c <= Math.min(rg.e.c, 30); c++) { const cell = ws[enc(r, c)]; if (cell && cell.t === 's') { const k = HDR_MAP[normHdr(cell.v)]; if (k && m[k] == null) { m[k] = c; hits++; } } }
+      if (hits >= 4 && m.troco != null && m.ri != null) { map = m; continue; }
+      const a = ws[enc(r, 0)];
+      if (!map || !a || a.t !== 'n' || a.v < 40000 || a.v > 60000) continue;
+      const dia = serialToDia(a.v);
+      if (dia.slice(0, 7) !== mes) continue;
+      const f = { dia };
+      IMP_KEYS.forEach(k => { f[k] = map[k] != null ? cellMoney(ws[enc(r, map[k])]) : 0; });
+      const dc = map._dep != null ? ws[enc(r, map._dep)] : null;
+      f.depPlanilha = dc && dc.t === 'n' ? Math.round(dc.v * 100) : null;
+      if (!f.ri) continue; // dia sem movimento
+      porDia[dia] = f;
+    }
+    const linhas = Object.values(porDia).sort((x, y) => x.dia < y.dia ? -1 : 1);
+    if (linhas.length && (!best || linhas.length > best.linhas.length)) best = { aba: nome, linhas };
+  });
+  return best;
+}
+/*IMPORT-END*/
 
 /* ============================================================
    UTILITÁRIOS
@@ -1282,6 +1322,8 @@ function renderFechamento(v) {
       <div class="sp"></div>
       <button class="bt pri" id="feHoje">+ Lançar hoje</button>
       <button class="bt" id="feOutro">+ Outro dia</button>
+      <button class="bt" id="feImp">⬆ Importar planilha</button>
+      <input type="file" id="feFile" accept=".xlsx,.xls,.xlsm" hidden>
       <button class="bt" id="feXls">⬇ Exportar Excel</button>
       <button class="bt" id="fePrint">🖨 Imprimir</button>
     </div>
@@ -1292,12 +1334,14 @@ function renderFechamento(v) {
   $('#feHoje').onclick = () => { if (FE.mes !== mesAtual()) { FE.mes = mesAtual(); $('#feM').value = FE.mes; useFechMes(FE.mes); } abrirFech(Number(FE.caixa), hoje()); };
   $('#feOutro').onclick = () => abrirFech(Number(FE.caixa), null);
   $('#feXls').onclick = exportarExcel;
+  $('#feImp').onclick = () => { const i = $('#feFile'); i.value = ''; i.click(); };
+  $('#feFile').onchange = e => { const f = e.target.files && e.target.files[0]; if (f) importarPlanilha(f); };
   $('#fePrint').onclick = () => window.print();
   syncFeButtons();
   useFechMes(FE.mes);
   renderFechLista();
 }
-function syncFeButtons() { const all = FE.caixa === 'all'; ['#feHoje', '#feOutro'].forEach(s => { const b = $(s); if (b) b.style.display = all ? 'none' : ''; }); }
+function syncFeButtons() { const all = FE.caixa === 'all'; ['#feHoje', '#feOutro', '#feImp'].forEach(s => { const b = $(s); if (b) b.style.display = all ? 'none' : ''; }); }
 function linhasCaixa(n) {
   const docs = FM.docs.filter(f => f.caixa === n);
   const map = {}; docs.forEach(f => map[f.dia] = f);
@@ -1443,6 +1487,63 @@ function abrirFech(n, dia) {
   };
   recalc();
   (novoLivre ? $('#fmDia') : inputs[0]).focus();
+}
+
+/* ---------- importar planilha antiga ---------- */
+async function importarPlanilha(file) {
+  let XLSX;
+  try { XLSX = await carregarXLSX(); } catch (e) { toast('Não foi possível carregar o leitor de planilhas. Verifique a internet.'); return; }
+  let wb;
+  try { wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: false }); }
+  catch (e) { toast('Não consegui abrir esse arquivo. Envie a planilha em .xlsx.'); return; }
+  const res = extrairMes(XLSX, wb, FE.mes);
+  if (!res) { toast(`Não encontrei dias de ${nomeMes(FE.mes)} com valores nessa planilha.`); return; }
+  let ov = $('#ovF');
+  if (!ov) { ov = document.createElement('div'); ov.className = 'ovf'; ov.id = 'ovF'; document.body.appendChild(ov); }
+  const linhas = res.linhas.map(f => ({ ...f, deposito: calcDeposito(f) }));
+  const tot = linhas.reduce((a, f) => ({ ri: a.ri + f.ri, dep: a.dep + f.deposito, moe: a.moe + f.moedas }), { ri: 0, dep: 0, moe: 0 });
+  const difs = linhas.filter(f => f.depPlanilha != null && f.depPlanilha !== f.deposito).length;
+  ov.innerHTML = `<div class="fmodal" role="dialog" aria-modal="true">
+    <div class="fm-h"><div><small>Importar planilha · ${esc(file.name)}</small><h3>${nomeMes(FE.mes)} — ${linhas.length} dia(s) com movimento</h3></div><button class="fm-x" id="imX" aria-label="Fechar">×</button></div>
+    <div style="padding:20px 24px 6px">
+      <div class="fe-tools" style="margin-bottom:12px">
+        <div class="f"><label for="imC">Importar para qual caixa?</label><select id="imC">${CX.map(n => `<option value="${n}">${esc(cxName(n))}</option>`).join('')}</select></div>
+        <div class="f" style="align-self:center;color:var(--muted);font-size:14px">Aba lida: <b>${esc(res.aba)}</b>. Os meses anteriores são ignorados.</div>
+      </div>
+      <div class="banner show ${difs ? 'warn' : 'info'}" style="margin-bottom:12px">${difs ? `Atenção: em ${difs} dia(s) o depósito da planilha é diferente do calculado. Confira antes de importar.` : 'Os depósitos calculados conferem com os da planilha em todos os dias.'}</div>
+      <div id="imAviso"></div>
+      <div class="fe-wrap" style="max-height:46vh;overflow:auto"><table class="fe num">
+        <thead><tr><th>Data</th><th>RI/TD/PJ</th><th>Troco</th><th>PIX</th><th>Débito</th><th>Crédito</th><th class="dep">Depósito</th><th>Na planilha</th><th>Moedas</th></tr></thead>
+        <tbody>${linhas.map(f => `<tr style="cursor:default"><td>${fmtDia(f.dia)} <small class="mut">${diaSemana(f.dia)}</small></td><td>${brlSemSimbolo(f.ri)}</td><td>${brlSemSimbolo(f.troco)}</td><td>${fmt0(f.pix)}</td><td>${fmt0(f.debito)}</td><td>${fmt0(f.credito)}</td><td class="dep ${f.deposito < 0 ? 'neg' : ''}">${brlSemSimbolo(f.deposito)}</td><td>${f.depPlanilha == null ? '–' : (f.depPlanilha === f.deposito ? '✓ ' : '<b style="color:var(--danger)">≠ ') + brlSemSimbolo(f.depPlanilha) + (f.depPlanilha === f.deposito ? '' : '</b>')}</td><td>${fmt0(f.moedas)}</td></tr>`).join('')}</tbody>
+        <tfoot><tr><td>Total</td><td>${brlSemSimbolo(tot.ri)}</td><td></td><td></td><td></td><td></td><td>${brlSemSimbolo(tot.dep)}</td><td></td><td>${brlSemSimbolo(tot.moe)}</td></tr></tfoot>
+      </table></div>
+    </div>
+    <div class="fm-foot"><span class="sp"></span><button class="btn sec" id="imCancel">Cancelar</button><button class="btn pri" id="imOk">Importar</button></div>
+  </div>`;
+  ov.classList.add('show');
+  const sel = $('#imC'); sel.value = FE.caixa === 'all' ? '1' : FE.caixa;
+  const aviso = () => {
+    const n = Number(sel.value); const ja = linhas.filter(f => FM.docs.some(d => d.caixa === n && d.dia === f.dia)).length;
+    $('#imAviso').innerHTML = ja ? `<div class="banner show warn" style="margin-bottom:12px">${esc(cxName(n))} já tem lançamento em ${ja} desses dias. Eles serão substituídos pelos valores da planilha.</div>` : '';
+    $('#imOk').textContent = `Importar ${linhas.length} dia(s) para ${cxName(n)}`;
+  };
+  sel.onchange = aviso; aviso();
+  const fechar = () => { ov.classList.remove('show'); ov.innerHTML = ''; };
+  $('#imX').onclick = fechar; $('#imCancel').onclick = fechar;
+  $('#imOk').onclick = async () => {
+    const n = Number(sel.value); const btn = $('#imOk'); btn.disabled = true; sel.disabled = true;
+    let ok = 0;
+    for (const f of linhas) {
+      btn.textContent = `Importando ${ok + 1} de ${linhas.length}…`;
+      const body = { caixa: n, dia: f.dia, mes: f.dia.slice(0, 7), obs: '', updatedAt: Date.now() };
+      FECH_KEYS.forEach(k => body[k] = f[k] || 0);
+      try { await Back.writeFech(fechId(f.dia, n), body); ok++; }
+      catch (e) { onWriteError(e); break; }
+    }
+    fechar();
+    if (ok) { FE.caixa = String(n); try { localStorage.setItem('rc_fe_caixa', FE.caixa); } catch (e) { } const c = $('#feC'); if (c) c.value = FE.caixa; syncFeButtons(); renderFechLista(); }
+    toast(ok === linhas.length ? `${ok} dia(s) importado(s) para ${cxName(n)}.` : `Importação parou em ${ok} de ${linhas.length} dia(s). Tente de novo.`);
+  };
 }
 
 /* ---------- exportar para Excel (mesmo formato da planilha) ---------- */
