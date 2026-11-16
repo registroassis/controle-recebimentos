@@ -67,7 +67,7 @@ p.sub{margin:0 0 22px;color:var(--muted)}
 .lerr{color:var(--danger);font-weight:600;font-size:14.5px;min-height:20px;margin:-4px 0 12px}
 
 /* Home */
-.home-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:16px}
 .cx-card{display:flex;flex-direction:column;gap:14px;padding:22px 20px 20px;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:var(--r);background:#fff;box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s,border-color .12s;min-height:200px;position:relative}
 .cx-card:hover{transform:translateY(-2px);border-color:var(--blue);box-shadow:0 10px 28px rgba(15,42,77,.12)}
 .cx-num{width:54px;height:54px;border-radius:14px;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:800;font-size:22px}
@@ -187,7 +187,8 @@ small.mut{color:var(--muted)}
 .kpi.main small,.kpi.main span{color:#c6d5ea}.kpi.main b{color:#fff}
 .adm-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;margin-bottom:20px}
 svg text{font-family:'Plus Jakarta Sans',system-ui,sans-serif}
-.names{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:16px 20px}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:16px 20px}
+.names .nm-x{border:0;background:transparent;color:var(--danger);font-weight:700;font-size:12.5px;padding:4px 0;cursor:pointer}
 .names label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px}
 .names input{width:100%;height:48px;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;font-size:15.5px}
 .names input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft-2)}
@@ -286,6 +287,7 @@ nav.mainnav a:not(.on):hover{background:rgba(255,255,255,.1)}
 .qlink b{font-size:20px;color:#0a1f45}
 .qlink span{font-size:15px}
 .qlink .chev{margin-left:auto;color:#1d4ea8;flex:none}
+@media (max-width:1420px){ #syncTxt{display:none} .out span{display:none} .brand small{display:none} nav.mainnav a{padding:10px 12px} }
 @media (max-width:1180px){ .deco{display:none} nav.mainnav a span{display:none} nav.mainnav a{padding:10px 12px} .brand small{display:none} #syncTxt{display:none} .out span{display:none} .top-in{flex-wrap:nowrap} .edit-names{position:static;display:inline-block;margin-top:16px} .home-links{grid-template-columns:1fr} }
 @media (max-width:760px){ .hero-home h1{font-size:30px} .edit-names{position:static;display:inline-block;margin-top:14px} .brand b{font-size:18px} .nav-sep{display:none} .cx-tab{font-size:24px} .cx-val{font-size:22px} }
 
@@ -294,7 +296,7 @@ nav.mainnav a:not(.on):hover{background:rgba(255,255,255,.1)}
 .fe-tools .f label{font-size:13px;margin-bottom:6px;color:var(--muted);display:block;font-weight:700}
 .fe-tools select,.fe-tools input{height:48px;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;font-size:15.5px;background:#fff;color:var(--ink)}
 .fe-tools .sp{flex:1}
-.bt{height:48px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--navy);font-weight:700;font-size:15px;padding:0 16px;display:inline-flex;align-items:center;gap:8px}
+.bt{height:48px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--navy);font-weight:700;font-size:14.5px;padding:0 13px;display:inline-flex;align-items:center;gap:8px}
 .bt:hover{border-color:var(--blue)}
 .bt.pri{background:#0a1f45;color:#fff;border-color:#0a1f45}
 .bt.pri:hover{background:#1e5fd6;border-color:#1e5fd6}
@@ -555,7 +557,9 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pad = n => String(n).padStart(2, '0');
-const CX = [1, 2, 3, 4, 5];
+let CX = [1, 2, 3, 4, 5]; // lista de caixas ativos (vem de config/caixas; pode ter mais de 5)
+const MAX_CX = 40;
+const cxValido = n => Number.isInteger(n) && n >= 1 && n <= MAX_CX;
 function diaLocal(ts) { const d = new Date(ts); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
 function hoje() { return diaLocal(Date.now()); }
 function addDias(dia, n) { const [y, m, d] = dia.split('-').map(Number); return diaLocal(new Date(y, m - 1, d + n).getTime()); }
@@ -595,14 +599,14 @@ const docId = (dia, n) => dia + '_c' + n;
 function normCont(id, d) {
   if (!d || typeof d !== 'object') return null;
   const caixa = Number(d.caixa);
-  if (!CX.includes(caixa) || typeof d.dia !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(d.dia)) return null;
+  if (!cxValido(caixa) || typeof d.dia !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(d.dia)) return null;
   const q = emptyQ(); const src = (d.q && typeof d.q === 'object') ? d.q : {};
   ALL.forEach(x => { const v = Number(src['d' + x]); q['d' + x] = Number.isFinite(v) && v > 0 ? Math.min(MAX_QTD, Math.floor(v)) : 0; });
   const updatedAt = Number.isFinite(Number(d.updatedAt)) ? Number(d.updatedAt) : null;
   return { id, caixa, dia: d.dia, q, updatedAt, ...resumo(q) }; // totais sempre recalculados a partir das quantidades
 }
 function normNomes(d) {
-  const o = {}; CX.forEach(n => { const v = d && d['c' + n]; o[n] = typeof v === 'string' ? v.trim().slice(0, 40) : ''; }); return o;
+  const o = {}; for (let n = 1; n <= MAX_CX; n++) { const v = d && d['c' + n]; o[n] = typeof v === 'string' ? v.trim().slice(0, 40) : ''; } return o;
 }
 
 /* ============================================================
@@ -697,7 +701,7 @@ let unsubDia = null;
 function startApp() {
   document.body.classList.remove('logged-out');
   stopApp();
-  unsubs.push(Back.subNomes(d => { S.nomes = normNomes(d); onNomesChanged(); }, onSubError));
+  unsubs.push(Back.subNomes(d => { setCaixas(d && d.lista); S.nomes = normNomes(d); aplicarHoje(); onNomesChanged(); }, onSubError));
   subscribeHoje();
   S.ready = true;
   updateBanner(); setSync(S.mode === 'local' ? 'local' : 'ok');
@@ -710,18 +714,36 @@ function stopApp() {
   closeRange();
   S.ready = false;
 }
+function ensureCx(n) {
+  if (!S.cont[n]) S.cont[n] = { q: emptyQ(), updatedAt: null };
+  if (!(n in S.nomes)) S.nomes[n] = '';
+  if (!W.chain[n]) { W.chain[n] = Promise.resolve(); W.count[n] = 0; }
+}
+function setCaixas(lista) {
+  const l = (Array.isArray(lista) ? lista : []).map(Number).filter(cxValido);
+  const u = Array.from(new Set(l)).sort((a, b) => a - b);
+  CX = u.length ? u : [1, 2, 3, 4, 5];
+  CX.forEach(ensureCx);
+}
+let hojeDocs = [], hojeDia = null;
+function aplicarHoje() {
+  if (hojeDia !== S.hoje) return;
+  CX.forEach(n => {
+    ensureCx(n);
+    if (busy(n)) return; // edição local ainda não gravada: mantém o que está sendo digitado
+    const f = hojeDocs.find(x => x.id === docId(hojeDia, n));
+    const c = f ? normCont(f.id, f.d) : null;
+    S.cont[n] = c ? { q: c.q, updatedAt: c.updatedAt } : { q: emptyQ(), updatedAt: null };
+    W.last[n] = JSON.stringify(S.cont[n].q);
+  });
+}
 function subscribeHoje() {
   if (unsubDia) unsubDia();
   const dia = S.hoje;
   unsubDia = Back.subDia(dia, docs => {
     if (dia !== S.hoje) return;
-    CX.forEach(n => {
-      if (busy(n)) return; // edição local ainda não gravada: mantém o que está sendo digitado
-      const f = docs.find(x => x.id === docId(dia, n));
-      const c = f ? normCont(f.id, f.d) : null;
-      S.cont[n] = c ? { q: c.q, updatedAt: c.updatedAt } : { q: emptyQ(), updatedAt: null };
-      W.last[n] = JSON.stringify(S.cont[n].q);
-    });
+    hojeDocs = docs; hojeDia = dia;
+    aplicarHoje();
     onHojeChanged();
   }, onSubError);
 }
@@ -842,8 +864,8 @@ $('#bOut').onclick = async () => {
 let route = 'inicio', curCx = null, cxTab = 'contagem';
 function parseRoute() {
   const h = (location.hash || '').replace('#', '');
-  const m = h.match(/^caixa-([1-5])$/);
-  if (m) return { r: 'caixa', n: Number(m[1]) };
+  const m = h.match(/^caixa-(\d{1,2})$/);
+  if (m && cxValido(Number(m[1]))) return { r: 'caixa', n: Number(m[1]) };
   if (['troco', 'historico', 'admin', 'fechamento'].includes(h)) return { r: h };
   if (h === 'nomes') return { r: 'admin', nomes: true };
   return { r: 'inicio' };
@@ -894,12 +916,12 @@ function renderInicio(v) {
       <h1>Selecione o seu caixa</h1>
       <p><b class="d">${esc(diaCap)}</b> • Cada caixa tem a sua contagem do dia, salva automaticamente.</p>
       <span class="accent"></span>
-      <a class="edit-names" href="#nomes">✎ Editar nomes dos caixas</a>
+      <a class="edit-names" href="#nomes">✎ Editar caixas e nomes</a>
     </section>
     <div class="home-grid">
       ${CX.map(n => {
         const c = S.cont[n]; const r = resumo(c.q);
-        return `<a class="cx-card k${n}" href="#caixa-${n}">
+        return `<a class="cx-card k${((n - 1) % 5) + 1}" href="#caixa-${n}">
           <div class="cx-top"><span class="cx-tab num">${pad(n)}</span><span class="pill ${r.total > 0 ? 'on' : 'off'}">${r.total > 0 ? 'Com lançamentos' : 'Sem lançamentos'}</span></div>
           <div class="cx-mid"><svg class="reg" viewBox="0 0 64 52" aria-hidden="true"><rect x="21" y="2" width="22" height="9" rx="2" fill="#1e3a6e"/><rect x="29" y="11" width="6" height="7" fill="#1e3a6e"/><path d="M10 18h44l4 16H6z" fill="#dbe7f8" stroke="#1e3a6e" stroke-width="3" stroke-linejoin="round"/><g fill="#1e3a6e"><rect x="14" y="22" width="6" height="3" rx="1"/><rect x="23" y="22" width="6" height="3" rx="1"/><rect x="32" y="22" width="6" height="3" rx="1"/><rect x="12" y="28" width="6" height="3" rx="1"/><rect x="21" y="28" width="6" height="3" rx="1"/><rect x="30" y="28" width="6" height="3" rx="1"/></g><rect x="43" y="21" width="9" height="6" rx="1" fill="#5ba3f0"/><rect x="4" y="34" width="56" height="15" rx="3" fill="#dbe7f8" stroke="#1e3a6e" stroke-width="3"/><rect x="24" y="40" width="16" height="3" rx="1.5" fill="#1e3a6e"/></svg><div><div class="cx-title">${esc(cxName(n))}</div><div class="cx-sub">Contagem de hoje</div></div></div>
           <div class="cx-val num">${brl(r.total)}</div>
@@ -911,7 +933,7 @@ function renderInicio(v) {
       <a class="qlink l1" href="#troco"><div class="ic">${icon('troco')}</div><div><b>Calculadora de Troco</b><span>Calcule o troco de forma rápida e segura</span></div>${icon('chev')}</a>
       <a class="qlink l2" href="#historico"><div class="ic">${icon('hist')}</div><div><b>Histórico</b><span>Consulte as contagens dos dias anteriores</span></div>${icon('chev')}</a>
       <a class="qlink l4" href="#fechamento"><div class="ic">${icon('fech')}</div><div><b>Fechamento de Caixa</b><span>Lançamento diário, mês a mês e caixa a caixa</span></div>${icon('chev')}</a>
-      <a class="qlink l3" href="#admin"><div class="ic">${icon('chart')}</div><div><b>Painel Geral</b><span>Visualize o resumo dos 5 caixas</span></div>${icon('chev')}</a>
+      <a class="qlink l3" href="#admin"><div class="ic">${icon('chart')}</div><div><b>Painel Geral</b><span>Visualize o resumo de todos os caixas</span></div>${icon('chev')}</a>
     </div>`;
 }
 function icon(k) {
@@ -941,6 +963,7 @@ function rowHTML(d, moeda) {
   </div>`;
 }
 function renderCaixa(v, n) {
+  ensureCx(n);
   v.innerHTML = `
     <div class="cx-head">
       <a class="back" href="#inicio">← Caixas</a>
@@ -1176,14 +1199,14 @@ function renderHistLista() {
 let admDia = null;
 function renderAdmin(v) {
   if (!admDia) admDia = hoje();
-  v.innerHTML = `<h1 class="page">Painel geral</h1><p class="sub">Visão consolidada dos 5 caixas, atualizada em tempo real.</p>
+  v.innerHTML = `<h1 class="page">Painel geral</h1><p class="sub">Visão consolidada de todos os caixas, atualizada em tempo real.</p>
     <div class="toolbar"><div class="f"><label for="aD">Dia</label><input type="date" id="aD"></div>
     <div class="f"><label>&nbsp;</label><button class="link-btn" id="aHoje">Hoje</button></div></div>
     <div id="admBody"></div>
     <section class="card" id="nomesCard">
-      <div class="card-h" style="scroll-margin-top:90px"><h2>Nomes dos caixas</h2><span class="tag">Aparecem na tela inicial, no painel e no histórico</span></div>
-      <div class="names">${CX.map(n => `<div><label for="nm${n}">Caixa ${pad(n)}</label><input id="nm${n}" maxlength="40" placeholder="${cxPadrao(n)}"></div>`).join('')}</div>
-      <div class="names-foot"><button class="btn sec" id="nmReset">Desfazer</button><button class="btn pri" id="nmSave">Salvar nomes</button></div>
+      <div class="card-h" style="scroll-margin-top:90px"><h2>Caixas e nomes</h2><span class="tag">Aparecem na tela inicial, no painel e no histórico</span></div>
+      <div class="names" id="nmGrid"></div>
+      <div class="names-foot"><button class="btn sec" id="nmAdd" style="margin-right:auto">+ Adicionar caixa</button><button class="btn sec" id="nmReset">Desfazer</button><button class="btn pri" id="nmSave">Salvar</button></div>
     </section>`;
   $('#aD').value = admDia;
   const go = () => { useRange(addDias(admDia, -6), admDia); renderAdminBody(); };
@@ -1194,17 +1217,34 @@ function renderAdmin(v) {
   $('#nmSave').onclick = salvarNomes;
   go();
 }
-let nomesSujos = false;
+let nomesSujos = false, nmLista = null, nmVal = {};
+function desenharNomes() {
+  const g = $('#nmGrid'); if (!g) return;
+  g.innerHTML = nmLista.map(n => `<div><label for="nm${n}">Caixa ${pad(n)}</label><input id="nm${n}" maxlength="40" placeholder="${cxPadrao(n)}" value="${esc(nmVal[n] || '')}">${nmLista.length > 1 ? `<button class="nm-x" data-rm="${n}">Remover caixa</button>` : ''}</div>`).join('');
+  $$('input', g).forEach(i => i.oninput = () => { nmVal[Number(i.id.slice(2))] = i.value; nomesSujos = true; });
+  $$('[data-rm]', g).forEach(b => b.onclick = async () => {
+    const n = Number(b.dataset.rm);
+    if (!(await confirmar({ titulo: `Remover o ${nmVal[n] || cxPadrao(n)}?`, texto: 'Ele deixa de aparecer nas telas. Os lançamentos já feitos continuam guardados, e o caixa volta se for adicionado de novo. A remoção só vale depois de clicar em "Salvar".', ok: 'Remover', perigo: true }))) return;
+    nmLista = nmLista.filter(x => x !== n); nomesSujos = true; desenharNomes();
+  });
+}
 function fillNomes(force) {
   if (!force && nomesSujos) return;
-  CX.forEach(n => { const i = $('#nm' + n); if (i) i.value = S.nomes[n]; });
-  nomesSujos = false;
-  $$('.names input').forEach(i => i.oninput = () => { nomesSujos = true; });
+  nmLista = CX.slice(); nmVal = {}; CX.forEach(n => nmVal[n] = S.nomes[n] || '');
+  nomesSujos = false; desenharNomes();
+  const add = $('#nmAdd'); if (add) add.onclick = () => {
+    const usados = new Set(nmLista); let n = 1; while (usados.has(n) && n <= MAX_CX) n++;
+    if (n > MAX_CX) { toast('Limite de caixas atingido.'); return; }
+    nmLista = nmLista.concat([n]).sort((x, y) => x - y); nmVal[n] = nmVal[n] || ''; nomesSujos = true; desenharNomes();
+    setTimeout(() => { const i = $('#nm' + n); if (i) i.focus(); }, 30);
+    toast(`Caixa ${pad(n)} adicionado. Dê um nome e clique em "Salvar".`);
+  };
 }
 async function salvarNomes() {
-  const o = {}; CX.forEach(n => { o['c' + n] = ($('#nm' + n).value || '').trim().slice(0, 40); });
+  const o = { lista: nmLista.slice() };
+  for (let n = 1; n <= MAX_CX; n++) { const v = nmLista.includes(n) ? nmVal[n] : S.nomes[n]; o['c' + n] = (v || '').trim().slice(0, 40); }
   const btn = $('#nmSave'); btn.disabled = true;
-  try { await Back.writeNomes(o); S.nomes = normNomes(o); nomesSujos = false; toast('Nomes dos caixas salvos.'); renderAdminBody(); }
+  try { await Back.writeNomes(o); setCaixas(o.lista); S.nomes = normNomes(o); aplicarHoje(); nomesSujos = false; toast('Caixas salvos.'); renderAdminBody(); fillNomes(true); }
   catch (e) { onWriteError(e); }
   btn.disabled = false;
 }
@@ -1226,11 +1266,11 @@ function renderAdminBody() {
       <div class="card kpi main"><small>Total geral recebido</small><b class="num">${brl(tot)}</b><span style="text-transform:capitalize">${esc(fmtDia(admDia, true))}</span></div>
       <div class="card kpi"><small>Total em cédulas</small><b class="num">${brl(ced)}</b><span class="num">${fmtInt(per.reduce((s, p) => s + p.qtdNotas, 0))} notas</span></div>
       <div class="card kpi"><small>Total em moedas</small><b class="num">${brl(moe)}</b><span class="num">${fmtInt(per.reduce((s, p) => s + p.qtdMoedas, 0))} moedas</span></div>
-      <div class="card kpi"><small>Caixas com lançamento</small><b class="num">${ativos} de 5</b><span>${isHoje ? 'atualizando ao vivo' : 'dia anterior'}</span></div>
+      <div class="card kpi"><small>Caixas com lançamento</small><b class="num">${ativos} de ${CX.length}</b><span>${isHoje ? 'atualizando ao vivo' : 'dia anterior'}</span></div>
     </div>
     <div class="adm-grid">
       <section class="card"><div class="card-h"><h2>Recebido por caixa</h2></div><div class="card-b">${barsCaixa(per)}</div></section>
-      <section class="card"><div class="card-h"><h2>Últimos 7 dias</h2><span class="tag">Total dos 5 caixas por dia</span></div><div class="card-b">${cols7(dias7)}</div></section>
+      <section class="card"><div class="card-h"><h2>Últimos 7 dias</h2><span class="tag">Total de todos os caixas por dia</span></div><div class="card-b">${cols7(dias7)}</div></section>
     </div>
     <section class="card" style="margin-bottom:20px">
       <div class="card-h"><h2>Resumo por caixa</h2></div>
@@ -1241,7 +1281,7 @@ function renderAdminBody() {
       </table></div>
     </section>
     <section class="card" style="margin-bottom:20px">
-      <div class="card-h"><h2>Quantidade por nota e moeda</h2><span class="tag">Soma dos 5 caixas</span></div>
+      <div class="card-h"><h2>Quantidade por nota e moeda</h2><span class="tag">Soma de todos os caixas</span></div>
       <div style="overflow-x:auto"><table class="t num">
         <thead><tr><th>Denominação</th><th class="r">Quantidade</th><th class="r">Valor</th></tr></thead>
         <tbody>${ALL.map(d => `<tr style="${qd[d] ? '' : 'color:#a3afbf'}"><td>${NOTAS.includes(d) ? 'Nota' : 'Moeda'} ${brl(d)}</td><td class="r">${fmtInt(qd[d])}</td><td class="r">${brl(qd[d] * d)}</td></tr>`).join('')}</tbody>
@@ -1297,7 +1337,7 @@ function closeFechMes() { if (FM.unsub) { try { FM.unsub(); } catch (e) { } } FM
 function normFech(id, d) {
   if (!d || typeof d !== 'object') return null;
   const caixa = Number(d.caixa);
-  if (!CX.includes(caixa) || typeof d.dia !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(d.dia)) return null;
+  if (!cxValido(caixa) || typeof d.dia !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(d.dia)) return null;
   const f = { id, caixa, dia: d.dia, mes: d.dia.slice(0, 7), obs: typeof d.obs === 'string' ? d.obs.slice(0, 120) : '', updatedAt: Number(d.updatedAt) || null };
   FECH_KEYS.forEach(k => { const v = Number(d[k]); f[k] = Number.isFinite(v) && v >= 0 ? Math.min(MAX_CENTS, Math.round(v)) : 0; });
   f.deposito = calcDeposito(f);
@@ -1387,7 +1427,7 @@ function renderFechResumo(box) {
   const g = somaFech(FM.docs);
   box.innerHTML = `
     <div class="kpis" id="feKpis">
-      <div class="card kpi main"><small>Total RI/TD/PJ</small><b class="num">${brl(g.ri)}</b><span>5 caixas · ${nomeMes(FE.mes)}</span></div>
+      <div class="card kpi main"><small>Total RI/TD/PJ</small><b class="num">${brl(g.ri)}</b><span>${CX.length} caixas · ${nomeMes(FE.mes)}</span></div>
       <div class="card kpi"><small>Total depositado</small><b class="num">${brl(g.deposito)}</b><span>${FM.docs.length} lançamento(s)</span></div>
       <div class="card kpi"><small>PIX + cartões</small><b class="num">${brl(g.pix + g.debito + g.credito)}</b><span>PIX ${brl(g.pix)}</span></div>
       <div class="card kpi"><small>Moedas no mês</small><b class="num">${brl(g.moedas)}</b><span>despesas ${brl(g.despesas)}</span></div>
